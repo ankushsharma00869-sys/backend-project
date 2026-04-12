@@ -92,9 +92,10 @@ public class ProfileService {
     }
 
    public ProfileDocument getCurrentProfile(){
-        if (SecurityContextHolder.getContext().getAuthentication() == null){
-            throw new UsernameNotFoundException("User not authenticated");
-        }
+       if (SecurityContextHolder.getContext().getAuthentication() == null ||
+               !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+           throw new UsernameNotFoundException("User not authenticated");
+       }
       String clerkId =  SecurityContextHolder.getContext().getAuthentication().getName();
        return profileRepository
                .findByClerkId(clerkId);

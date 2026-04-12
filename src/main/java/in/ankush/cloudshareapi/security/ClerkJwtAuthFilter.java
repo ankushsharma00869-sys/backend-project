@@ -37,13 +37,12 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 
-        String path = request.getServletPath();
-
-        if (request.getRequestURI().contains("/webhooks") ||
-                request.getRequestURI().contains("/public") ||
-                request.getRequestURI().contains("/files/download") ||
-                request.getRequestURI().contains("/files/view") ||
-                request.getRequestURI().contains("/auth")) {
+        String path = request.getRequestURI();
+        if (path.startsWith("/webhooks") ||
+                path.startsWith("/files/public") ||
+                path.startsWith("/files/download") ||
+                path.startsWith("/files/view") ||
+                path.startsWith("/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -94,8 +93,13 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
                             Collections.singletonList(
                                     new SimpleGrantedAuthority("ROLE_ADMIN"))
                     );
+            authenticationToken.setDetails(
+                    new org.springframework.security.web.authentication.WebAuthenticationDetailsSource()
+                            .buildDetails(request)
+            );
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
