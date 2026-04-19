@@ -78,7 +78,6 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .setAllowedClockSkewSeconds(60)
-                    .requireIssuer(clerkIssuer)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
