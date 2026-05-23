@@ -25,35 +25,42 @@ public class SecurityConfig {
     private final ClerkJwtAuthFilter clerkJwtAuthFilter;
 
    @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+private UrlBasedCorsConfigurationSource corsConfigurationSource() {
 
-    http
-            .cors(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
+    CorsConfiguration config = new CorsConfiguration();
 
-            .authorizeHttpRequests(auth -> auth
+    config.setAllowedOriginPatterns(List.of(
+            "http://localhost:5173",
+            "https://frontend-gilt-one-wxd71mxo90.vercel.app"
+    ));
 
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+    config.setAllowedMethods(List.of(
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS"
+    ));
 
-                    .requestMatchers(
-                            "/webhooks/**",
-                            "/files/public/**",
-                            "/files/download/**",
-                            "/files/view/**",
-                            "/auth/**"
-                    ).permitAll()
+    config.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "Origin",
+            "Accept"
+    ));
 
-                    .anyRequest().authenticated()
-            )
+    config.setExposedHeaders(List.of(
+            "Authorization"
+    ));
 
-            .sessionManagement(session ->
-                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+    config.setAllowCredentials(true);
 
-            .addFilterBefore(
-                    clerkJwtAuthFilter,
-                    UsernamePasswordAuthenticationFilter.class
-            );
+    UrlBasedCorsConfigurationSource source =
+            new UrlBasedCorsConfigurationSource();
 
-    return http.build();
+    source.registerCorsConfiguration("/**", config);
+
+    return source;
 }
 }
