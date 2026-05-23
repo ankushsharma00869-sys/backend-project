@@ -41,18 +41,19 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
-        // ==============================
-        // IMPORTANT: Allow OPTIONS request
-        // ==============================
+        // =========================================
+        // ALLOW PREFLIGHT OPTIONS REQUEST
+        // =========================================
         if (HttpMethod.OPTIONS.matches(request.getMethod())) {
-            response.setStatus(HttpServletResponse.SC_OK);
+
             filterChain.doFilter(request, response);
+
             return;
         }
 
-        // ==============================
+        // =========================================
         // PUBLIC ROUTES
-        // ==============================
+        // =========================================
         if (
                 requestURI.startsWith("/webhooks") ||
                 requestURI.startsWith("/files/public") ||
@@ -60,41 +61,53 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
                 requestURI.startsWith("/files/view") ||
                 requestURI.startsWith("/auth")
         ) {
+
             filterChain.doFilter(request, response);
+
             return;
         }
 
-        // ==============================
-        // AUTH HEADER CHECK
-        // ==============================
+        // =========================================
+        // GET AUTHORIZATION HEADER
+        // =========================================
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (authHeader == null ||
+                !authHeader.startsWith("Bearer ")) {
 
             response.sendError(
                     HttpServletResponse.SC_FORBIDDEN,
                     "Authorization header missing or invalid"
             );
+
             return;
         }
 
         try {
 
+            // =========================================
+            // EXTRACT JWT TOKEN
+            // =========================================
             String token = authHeader.substring(7);
 
-            // ==============================
-            // JWT HEADER PARSE
-            // ==============================
+            // =========================================
+            // SPLIT JWT
+            // =========================================
             String[] chunks = token.split("\\.");
 
             if (chunks.length != 3) {
+
                 response.sendError(
                         HttpServletResponse.SC_FORBIDDEN,
                         "Invalid JWT format"
                 );
+
                 return;
             }
 
+            // =========================================
+            // READ JWT HEADER
+            // =========================================
             String headerJson = new String(
                     Base64.getUrlDecoder().decode(chunks[0])
             );
@@ -103,25 +116,30 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
 
             JsonNode headerNode = mapper.readTree(headerJson);
 
+            // =========================================
+            // CHECK kid
+            // =========================================
             if (!headerNode.has("kid")) {
 
                 response.sendError(
                         HttpServletResponse.SC_FORBIDDEN,
                         "JWT missing kid"
                 );
+
                 return;
             }
 
             String kid = headerNode.get("kid").asText();
 
-            // ==============================
-            // GET PUBLIC KEY
-            // ==============================
-            PublicKey publicKey = jwksProvider.getPublicKey(kid);
+            // =========================================
+            // GET CLERK PUBLIC KEY
+            // =========================================
+            PublicKey publicKey =
+                    jwksProvider.getPublicKey(kid);
 
-            // ==============================
+            // =========================================
             // VERIFY JWT
-            // ==============================
+            // =========================================
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(publicKey)
                     .requireIssuer(clerkIssuer)
@@ -130,14 +148,14 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
                     .parseClaimsJws(token)
                     .getBody();
 
-            // ==============================
+            // =========================================
             // GET USER ID
-            // ==============================
+            // =========================================
             String clerkId = claims.getSubject();
 
-            // ==============================
-            // CREATE AUTH TOKEN
-            // ==============================
+            // =========================================
+            // CREATE AUTHENTICATION
+            // =========================================
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             clerkId,
@@ -152,15 +170,15 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
                             .buildDetails(request)
             );
 
-            // ==============================
+            // =========================================
             // SET SECURITY CONTEXT
-            // ==============================
+            // =========================================
             SecurityContextHolder.getContext()
                     .setAuthentication(authentication);
 
-            // ==============================
+            // =========================================
             // CONTINUE REQUEST
-            // ==============================
+            // =========================================
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
