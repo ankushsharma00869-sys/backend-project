@@ -55,11 +55,12 @@ public class ClerkJwtAuthFilter extends OncePerRequestFilter {
         // PUBLIC ROUTES
         // =========================================
         if (
-                requestURI.startsWith("/webhooks") ||
-                requestURI.startsWith("/files/public") ||
-                requestURI.startsWith("/files/download") ||
-                requestURI.startsWith("/files/view") ||
-                requestURI.startsWith("/auth")
+        requestURI.contains("/webhooks") ||
+        requestURI.contains("/files/public") ||
+        requestURI.contains("/files/download") ||
+        requestURI.contains("/files/view") ||
+        requestURI.contains("/auth")
+
         ) {
 
             filterChain.doFilter(request, response);
