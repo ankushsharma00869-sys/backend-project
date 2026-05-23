@@ -24,49 +24,36 @@ public class SecurityConfig {
 
     private final ClerkJwtAuthFilter clerkJwtAuthFilter;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(Customizer.withDefaults())
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/webhooks/**",
-                                "/files/public/**",
-                                "/files/download/**",
-                                "/files/view/**",
-                                "/auth/**"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(clerkJwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+   @Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        return http.build();
-    }
+    http
+            .cors(Customizer.withDefaults())
+            .csrf(AbstractHttpConfigurer::disable)
 
-    @Bean
-    public CorsFilter corsFilter() {
-        return new CorsFilter(corsConfigurationSource());
-    }
+            .authorizeHttpRequests(auth -> auth
 
-    private UrlBasedCorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://frontend-gilt-one-wxd71mxo90.vercel.app"
-        ));
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-        ));
-        config.setAllowedHeaders(List.of("Authorization", "Content-type"));
-        config.setAllowCredentials(true);
+                    .requestMatchers(
+                            "/webhooks/**",
+                            "/files/public/**",
+                            "/files/download/**",
+                            "/files/view/**",
+                            "/auth/**"
+                    ).permitAll()
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+                    .anyRequest().authenticated()
+            )
+
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            .addFilterBefore(
+                    clerkJwtAuthFilter,
+                    UsernamePasswordAuthenticationFilter.class
+            );
+
+    return http.build();
+}
 }
