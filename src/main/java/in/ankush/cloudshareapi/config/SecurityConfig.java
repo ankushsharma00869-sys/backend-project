@@ -24,9 +24,6 @@ public class SecurityConfig {
 
     private final ClerkJwtAuthFilter clerkJwtAuthFilter;
 
-    // =========================================
-    // SECURITY FILTER CHAIN
-    // =========================================
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
@@ -63,17 +60,11 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // =========================================
-    // CORS FILTER
-    // =========================================
     @Bean
     public CorsFilter corsFilter() {
         return new CorsFilter(corsConfigurationSource());
     }
 
-    // =========================================
-    // CORS CONFIGURATION
-    // =========================================
     @Bean
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
 
@@ -81,7 +72,9 @@ public class SecurityConfig {
 
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://frontend-gilt-one-wxd71mxo90.vercel.app"
+                "https://frontend-gilt-one-wxd71mxo90.vercel.app",
+                "https://frontend-o61iptpg3-ankush-sharmas-projects-2b0dbb02.vercel.app",
+                "https://frontend-bi30fcgj7-ankush-sharmas-projects-2b0dbb02.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
@@ -93,16 +86,9 @@ public class SecurityConfig {
                 "OPTIONS"
         ));
 
-        config.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "Origin",
-                "Accept"
-        ));
+        config.setAllowedHeaders(List.of("*"));
 
-        config.setExposedHeaders(List.of(
-                "Authorization"
-        ));
+        config.setExposedHeaders(List.of("*"));
 
         config.setAllowCredentials(true);
 
