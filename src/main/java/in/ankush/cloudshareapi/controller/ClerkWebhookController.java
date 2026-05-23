@@ -170,30 +170,32 @@ public class ClerkWebhookController {
         System.out.println("USER DELETED SUCCESSFULLY");
     }
 
-    private boolean verifyWebhooksSignature(
-            String svixId,
-            String svixTimestamp,
-            String svixSignature,
-            String payload) {
+   private boolean verifyWebhooksSignature(
+        String svixId,
+        String svixTimestamp,
+        String svixSignature,
+        String payload
+) {
 
-        try {
+    try {
 
-            Webhook webhook = new Webhook(webhookSecret);
+        Webhook webhook = new Webhook(webhookSecret);
 
-            webhook.verify(
-                    payload,
-                    svixId,
-                    svixTimestamp,
-                    svixSignature
-            );
+        HttpHeaders headers = HttpHeaders.of(
+                Map.of(
+                        "svix-id", List.of(svixId),
+                        "svix-timestamp", List.of(svixTimestamp),
+                        "svix-signature", List.of(svixSignature)
+                ),
+                (k, v) -> true
+        );
 
-            return true;
+        webhook.verify(payload, headers);
 
-        } catch (WebhookVerificationException e) {
+        return true;
 
-            System.out.println("Webhook verification failed");
-
-            return false;
-        }
+    } catch (Exception e) {
+        return false;
     }
+}
 }
